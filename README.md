@@ -45,3 +45,13 @@ short line: the AI reads them on every call.
 
 ## Chat commands (no AI used)
 `/render` final video, `/preview` quick half-size render, `/draft vertical` rebuild the first cut.
+
+## Script lines (exact image timing)
+Tell it which image goes with which narration and each image starts exactly when that line is spoken:
+```
+02__Tyler_2015.jpg | It starts in Los Angeles, 2015
+Andrew_Finch.jpg | Inside is an innocent man named Andrew
+```
+The block form (`IMAGE 02:` / filename / `NARRATION:` / quoted text) works too, and so does a `scenes.txt` in the zip.
+Lines are matched against Whisper's word timestamps, so a misheard word does not break it. Two files with the same
+line share that moment. Files with no line are left out, and the chat tells you which. `/align` re-runs it.
