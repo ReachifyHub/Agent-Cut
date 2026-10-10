@@ -1,0 +1,21 @@
+[
+  {"file": "chime.mp3", "description": "Soft chime: pleasant highlight, step done."},
+  {"file": "click.mp3", "description": "UI click: quick cuts, list items, button presses."},
+  {"file": "click-soft.mp3", "description": "Quiet click: subtle UI moments."},
+  {"file": "error.mp3", "description": "Error buzz: mistake, failure, warning."},
+  {"file": "glitch-1.mp3", "description": "Digital glitch: tech, hacking, jarring cut."},
+  {"file": "glitch-2.mp3", "description": "Digital glitch (variant of glitch-1)."},
+  {"file": "glitch-3.mp3", "description": "Digital glitch (variant of glitch-1)."},
+  {"file": "impact-bass-1.mp3", "description": "Deep bass hit: shocking fact, big reveal, section start."},
+  {"file": "impact-bass-2.mp3", "description": "Deep bass hit (variant of impact-bass-1)."},
+  {"file": "key-press.mp3", "description": "Single key press: text or command appearing."},
+  {"file": "notification.mp3", "description": "Phone notification: message, alert, something happened."},
+  {"file": "ping.mp3", "description": "Clean ping: mark a key word."},
+  {"file": "pop.mp3", "description": "Bubble pop: small reveal, list item appearing."},
+  {"file": "riser.mp3", "description": "Rising tension: start before a reveal so it peaks on the cut."},
+  {"file": "sparkle.mp3", "description": "Magic shimmer: something special or valuable appears."},
+  {"file": "typing.mp3", "description": "Keyboard typing: coding or writing scenes. Keep volume low."},
+  {"file": "whoosh.mp3", "description": "Default swoosh: transitions, slides, zooms."},
+  {"file": "whoosh-cinematic.mp3", "description": "Big dramatic whoosh: major scene change only."},
+  {"file": "whoosh-short.mp3", "description": "Very quick whoosh: fast cuts."}
+]

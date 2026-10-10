@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en" class="bg-ink-950">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0E10">
+<title>agentcut</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  fontFamily: { display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] },
+  colors: { ink: { 950: '#0B0E10', 900: '#11161A', 800: '#182026', 700: '#222C34', 600: '#33424D', 400: '#8397A3', 200: '#C9D4DA' },
+            signal: '#FFB020', mint: '#46D9A0', coral: '#FF6B5E' }
+}}};
+</script>
+<style>
+  body { background:
+    radial-gradient(900px 420px at 85% -10%, rgba(255,176,32,.10), transparent 60%),
+    radial-gradient(700px 380px at -10% 10%, rgba(70,217,160,.07), transparent 60%), #0B0E10;
+    padding-top: env(safe-area-inset-top); }
+  .stripes { background-image: linear-gradient(120deg, rgba(0,0,0,.18) 25%, transparent 25% 50%, rgba(0,0,0,.18) 50% 75%, transparent 75%);
+    background-size: 22px 22px; animation: slide 0.9s linear infinite; }
+  .indet { position: relative; overflow: hidden; }
+  .indet::after { content: ""; position: absolute; inset: 0; width: 40%; background: #FFB020; border-radius: 9999px; animation: sweep 1.2s ease-in-out infinite; }
+  @keyframes slide { to { background-position: 22px 0; } }
+  @keyframes sweep { 0% { left: -40%; } 100% { left: 100%; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise .25s ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .stripes, .indet::after, .rise, .spin { animation: none !important; } }
+  .spin { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  :focus-visible { outline: 2px solid #FFB020; outline-offset: 2px; }
+  textarea { field-sizing: content; }
+</style>
+</head>
+<body class="min-h-dvh font-display text-ink-200 antialiased">
+
+<header class="sticky top-0 z-30 border-b border-ink-700 bg-ink-950/85 backdrop-blur">
+  <div class="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+    <div class="flex items-center gap-2.5">
+      <div class="grid h-8 w-8 place-items-center rounded-md bg-signal text-ink-950">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l6 7-6 7M13 19h6"/></svg>
+      </div>
+      <span class="text-lg font-bold tracking-tight text-white">agentcut</span>
+    </div>
+    <button id="aiChip" type="button" class="flex min-h-11 items-center gap-2 rounded-full border border-ink-600 bg-ink-900 px-3 font-mono text-xs text-ink-200 active:bg-ink-800">
+      <span id="aiDot" class="h-2 w-2 rounded-full bg-signal"></span><span id="aiLabel">Set up AI</span>
+    </button>
+  </div>
+</header>
+
+<main class="mx-auto max-w-2xl px-4 pb-64 pt-5">
+
+  <ol class="mb-5 grid grid-cols-3 gap-2 font-mono text-[11px] uppercase tracking-wider" id="steps">
+    <li data-s="1" class="rounded-md border border-ink-700 bg-ink-900 px-3 py-2"><span class="text-ink-400">01</span><br><b class="font-semibold">Footage</b></li>
+    <li data-s="2" class="rounded-md border border-ink-700 bg-ink-900 px-3 py-2"><span class="text-ink-400">02</span><br><b class="font-semibold">Direct</b></li>
+    <li data-s="3" class="rounded-md border border-ink-700 bg-ink-900 px-3 py-2"><span class="text-ink-400">03</span><br><b class="font-semibold">Export</b></li>
+  </ol>
+
+  <!-- UPLOAD -->
+  <section class="rounded-xl border border-ink-700 bg-ink-900 p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-base font-bold text-white">Your footage</h2>
+        <p class="mt-1 text-sm text-ink-400">One zip: numbered images and clips, plus <span class="font-mono text-ink-200">voiceover.mp3</span>.</p>
+      </div>
+      <button id="pick" type="button" class="min-h-11 shrink-0 rounded-lg bg-signal px-4 text-sm font-bold text-ink-950 active:opacity-80 disabled:opacity-40">Choose zip</button>
+    </div>
+    <input id="zip" type="file" accept=".zip,application/zip" class="hidden">
+
+    <div id="upBox" class="mt-4 hidden rise">
+      <div class="flex items-baseline justify-between gap-3">
+        <p id="upName" class="truncate font-mono text-xs text-ink-200"></p>
+        <p id="upPct" class="font-mono text-xs font-semibold text-signal"></p>
+      </div>
+      <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-ink-700"><div id="upBar" class="stripes h-full w-0 rounded-full bg-signal transition-[width] duration-200"></div></div>
+      <p id="upMeta" class="mt-2 font-mono text-xs text-ink-400"></p>
+
+      <ul class="mt-3 space-y-2 text-sm" id="upSteps">
+        <li data-u="send" class="flex items-center gap-2"><i class="ic"></i><span>Uploading</span></li>
+        <li data-u="unpack" class="flex items-center gap-2"><i class="ic"></i><span>Unpacking and checking files</span></li>
+        <li data-u="ready" class="flex items-center gap-2"><i class="ic"></i><span>Ready to edit</span></li>
+      </ul>
+      <div id="unpackBar" class="indet mt-3 hidden h-1.5 rounded-full bg-ink-700"></div>
+    </div>
+
+    <div id="summary" class="mt-4 hidden rise">
+      <div id="chips" class="flex flex-wrap gap-2 font-mono text-xs"></div>
+      <details class="mt-3 text-sm"><summary class="min-h-8 cursor-pointer text-ink-400">Files in order</summary>
+        <pre id="fileList" class="mt-2 whitespace-pre-wrap font-mono text-xs leading-relaxed text-ink-400"></pre></details>
+    </div>
+    <p id="upErr" class="mt-3 hidden rounded-lg bg-coral/10 p-3 text-sm text-coral"></p>
+  </section>
+
+  <!-- FEED -->
+  <section id="feedWrap" class="mt-5 hidden">
+    <div id="feed" class="space-y-3"></div>
+  </section>
+</main>
+
+<!-- COMPOSER -->
+<div id="composer" class="fixed inset-x-0 bottom-0 z-30 hidden border-t border-ink-700 bg-ink-900/95 backdrop-blur" style="padding-bottom:env(safe-area-inset-bottom)">
+  <div class="mx-auto max-w-2xl px-4 pb-3 pt-2">
+    <div class="mb-2 flex gap-2 overflow-x-auto font-mono text-xs [scrollbar-width:none]">
+      <button data-cmd="/render" data-label="Render final video" class="chip min-h-10 shrink-0 rounded-full border border-ink-600 px-3 active:bg-ink-700">Render final</button>
+      <button data-cmd="/preview" data-label="Render a quick preview" class="chip min-h-10 shrink-0 rounded-full border border-ink-600 px-3 active:bg-ink-700">Preview</button>
+      <button data-cmd="/draft" data-label="Rebuild the first cut" class="chip min-h-10 shrink-0 rounded-full border border-ink-600 px-3 active:bg-ink-700">Redraft</button>
+      <button id="tpl" class="min-h-10 shrink-0 rounded-full border border-signal/50 px-3 text-signal active:bg-ink-700">Brief template</button>
+    </div>
+    <div class="flex items-end gap-2">
+      <textarea id="msg" rows="2" placeholder="Describe the video you want..." class="max-h-40 min-h-12 w-full resize-none rounded-lg border border-ink-600 bg-ink-950 px-3 py-2.5 text-base text-white placeholder:text-ink-400"></textarea>
+      <button id="send" type="button" class="min-h-12 shrink-0 rounded-lg bg-signal px-5 font-bold text-ink-950 active:opacity-80 disabled:opacity-40">Send</button>
+    </div>
+    <p class="mt-1.5 font-mono text-[11px] text-ink-400">Free-model tip: one message = one AI call. Buttons above use no AI at all.</p>
+  </div>
+</div>
+
+<!-- SETTINGS SHEET -->
+<div id="sheet" class="fixed inset-0 z-40 hidden">
+  <div id="scrim" class="absolute inset-0 bg-black/60"></div>
+  <div class="absolute inset-x-0 bottom-0 mx-auto max-h-[92dvh] max-w-2xl overflow-y-auto rounded-t-2xl border border-ink-600 bg-ink-900 p-5 rise" style="padding-bottom:calc(1.25rem + env(safe-area-inset-bottom))">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-white">Settings</h2>
+      <button id="closeSheet" class="min-h-11 px-2 text-ink-400">Close</button>
+    </div>
+
+    <label class="mb-1 block font-mono text-xs uppercase tracking-wider text-ink-400" for="fKey">Password (from your Modal secret)</label>
+    <input id="fKey" type="password" autocomplete="current-password" class="mb-5 min-h-12 w-full rounded-lg border border-ink-600 bg-ink-950 px-3 text-base text-white">
+
+    <p class="mb-2 font-mono text-xs uppercase tracking-wider text-ink-400">AI provider</p>
+    <div id="presets" class="mb-3 flex flex-wrap gap-2 font-mono text-xs"></div>
+
+    <label class="mb-1 block font-mono text-xs uppercase tracking-wider text-ink-400" for="fBase">Base URL</label>
+    <input id="fBase" inputmode="url" autocapitalize="off" autocorrect="off" placeholder="https://openrouter.ai/api/v1" class="mb-3 min-h-12 w-full rounded-lg border border-ink-600 bg-ink-950 px-3 font-mono text-sm text-white placeholder:text-ink-600">
+
+    <label class="mb-1 block font-mono text-xs uppercase tracking-wider text-ink-400" for="fAiKey">API key</label>
+    <input id="fAiKey" type="password" autocapitalize="off" autocorrect="off" class="mb-3 min-h-12 w-full rounded-lg border border-ink-600 bg-ink-950 px-3 font-mono text-sm text-white">
+
+    <label class="mb-1 block font-mono text-xs uppercase tracking-wider text-ink-400" for="fModel">Model ID</label>
+    <input id="fModel" autocapitalize="off" autocorrect="off" placeholder="deepseek/deepseek-chat" class="min-h-12 w-full rounded-lg border border-ink-600 bg-ink-950 px-3 font-mono text-sm text-white placeholder:text-ink-600">
+    <p class="mb-4 mt-1.5 text-xs text-ink-400">Your key stays in this browser and is sent only to your own server with each request. It is never stored on Modal. Plain instruct models work best; "thinking" models burn tokens.</p>
+
+    <details class="mb-4"><summary class="min-h-10 cursor-pointer text-sm text-ink-400">Advanced: server URL</summary>
+      <input id="fServer" inputmode="url" autocapitalize="off" placeholder="leave empty if this page is served by your Modal app" class="mt-2 min-h-12 w-full rounded-lg border border-ink-600 bg-ink-950 px-3 font-mono text-sm text-white placeholder:text-ink-600"></details>
+
+    <div class="flex gap-2">
+      <button id="saveSet" class="min-h-12 flex-1 rounded-lg bg-signal font-bold text-ink-950 active:opacity-80">Save</button>
+      <button id="testAi" class="min-h-12 rounded-lg border border-ink-600 px-4 font-semibold active:bg-ink-700">Test AI</button>
+    </div>
+    <p id="testOut" class="mt-3 hidden rounded-lg p-3 font-mono text-xs"></p>
+    <button id="newProj" class="mt-5 min-h-11 text-sm text-ink-400 underline decoration-ink-600">Forget this project on this phone</button>
+  </div>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const FIELDS = { key: '', base: '', aiKey: '', model: '', server: '', project: '' };
+const S = {}; for (const k in FIELDS) S[k] = localStorage.getItem('ac2_' + k) || '';
+const save = () => { for (const k in FIELDS) localStorage.setItem('ac2_' + k, S[k]); };
+const url = p => (S.server.replace(/\/$/, '')) + p;
+const H = () => ({ 'X-Key': S.key });
+const fileUrl = n => url('/files/' + S.project + '/' + n) + '?key=' + encodeURIComponent(S.key);
+const agent = () => ({ base: S.base, key: S.aiKey, model: S.model });
+
+const fmtBytes = b => b >= 1e9 ? (b / 1e9).toFixed(2) + ' GB' : b >= 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
+const fmtT = s => s < 60 ? Math.round(s) + 's' : Math.floor(s / 60) + 'm ' + String(Math.round(s % 60)).padStart(2, '0') + 's';
+
+const IC = {
+  wait: '<svg class="h-4 w-4 text-ink-600" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  run: '<svg class="spin h-4 w-4 text-signal" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-opacity=".25" stroke-width="2"/><path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  done: '<svg class="h-4 w-4 text-mint" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  bad: '<svg class="h-4 w-4 text-coral" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
+};
+const setIc = (li, st) => { li.querySelector('.ic').outerHTML = '<i class="ic">' + IC[st] + '</i>'; };
+
+/* ---------- stepper + AI chip ---------- */
+function setStep(n) {
+  $$('#steps li').forEach(li => {
+    const on = +li.dataset.s === n, past = +li.dataset.s < n;
+    li.className = 'rounded-md border px-3 py-2 ' + (on ? 'border-signal bg-signal/10 text-white' : past ? 'border-mint/40 bg-ink-900 text-ink-200' : 'border-ink-700 bg-ink-900 text-ink-400');
+  });
+}
+function refreshChip() {
+  const ok = S.base && S.aiKey && S.model;
+  $('#aiDot').className = 'h-2 w-2 rounded-full ' + (ok ? 'bg-mint' : 'bg-signal');
+  $('#aiLabel').textContent = ok ? S.model.split('/').pop().slice(0, 22) : 'Set up AI';
+}
+
+/* ---------- settings ---------- */
+const PRESETS = {
+  OpenRouter: { base: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat' },
+  Groq: { base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
+  Gemini: { base: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-flash-latest' },
+  DeepSeek: { base: 'https://api.deepseek.com', model: 'deepseek-chat' }
+};
+for (const [name, p] of Object.entries(PRESETS)) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = name;
+  b.className = 'min-h-10 rounded-full border border-ink-600 px-3 active:bg-ink-700';
+  b.onclick = () => { $('#fBase').value = p.base; $('#fModel').value = p.model; };
+  $('#presets').appendChild(b);
+}
+function openSheet() {
+  $('#fKey').value = S.key; $('#fBase').value = S.base; $('#fAiKey').value = S.aiKey;
+  $('#fModel').value = S.model; $('#fServer').value = S.server;
+  $('#testOut').classList.add('hidden'); $('#sheet').classList.remove('hidden');
+}
+function readSheet() {
+  S.key = $('#fKey').value.trim(); S.base = $('#fBase').value.trim().replace(/\/$/, '');
+  S.aiKey = $('#fAiKey').value.trim(); S.model = $('#fModel').value.trim(); S.server = $('#fServer').value.trim();
+  save(); refreshChip();
+}
+$('#aiChip').onclick = openSheet;
+$('#closeSheet').onclick = $('#scrim').onclick = () => $('#sheet').classList.add('hidden');
+$('#saveSet').onclick = () => { readSheet(); $('#sheet').classList.add('hidden'); boot(); };
+$('#testAi').onclick = async () => {
+  readSheet();
+  const out = $('#testOut'); out.className = 'mt-3 rounded-lg bg-ink-800 p-3 font-mono text-xs text-ink-200'; out.textContent = 'Testing (about 20 tokens)...';
+  try {
+    const r = await fetch(url('/api/test'), { method: 'POST', headers: { ...H(), 'Content-Type': 'application/json' }, body: JSON.stringify(agent()) });
+    if (r.status === 401) throw new Error('Wrong password for your server.');
+    const j = await r.json();
+    out.className = 'mt-3 rounded-lg p-3 font-mono text-xs ' + (j.ok ? 'bg-mint/10 text-mint' : 'bg-coral/10 text-coral');
+    out.textContent = j.ok ? 'Works. Model replied "' + j.reply + '" (' + j.tokens + ' tokens).' : j.error;
+  } catch (e) { out.className = 'mt-3 rounded-lg bg-coral/10 p-3 font-mono text-xs text-coral'; out.textContent = String(e.message || e); }
+};
+$('#newProj').onclick = () => { S.project = ''; save(); location.reload(); };
+
+/* ---------- upload ---------- */
+function sendChunk(u, blob, onProg) {
+  return new Promise((res, rej) => {
+    const x = new XMLHttpRequest(); x.open('POST', u); x.setRequestHeader('X-Key', S.key);
+    x.upload.onprogress = e => e.lengthComputable && onProg(e.loaded);
+    x.onload = () => x.status === 200 ? res() : rej(new Error(x.status === 401 ? 'Wrong password.' : 'Server said ' + x.status));
+    x.onerror = () => rej(new Error('network'));
+    x.send(blob);
+  });
+}
+const upStep = (id, st) => { const li = $('[data-u="' + id + '"]'); setIc(li, st); li.className = 'flex items-center gap-2 ' + (st === 'wait' ? 'text-ink-400' : 'text-ink-200'); };
+function upError(t) { $('#upErr').textContent = t; $('#upErr').classList.remove('hidden'); $('#pick').disabled = false; }
+
+async function uploadZip(f) {
+  if (!S.key) { openSheet(); return; }
+  $('#upErr').classList.add('hidden'); $('#summary').classList.add('hidden');
+  $('#upBox').classList.remove('hidden'); $('#pick').disabled = true;
+  $('#upName').textContent = f.name; $('#upBar').style.width = '0%'; $('#upBar').classList.add('stripes');
+  ['send', 'unpack', 'ready'].forEach(s => upStep(s, 'wait')); upStep('send', 'run');
+  $('#unpackBar').classList.add('hidden'); $('#feed').innerHTML = ''; $('#feedWrap').classList.add('hidden'); $('#composer').classList.add('hidden');
+  setStep(1);
+  const CH = 8 * 1024 * 1024, t0 = performance.now();
+  try {
+    let r = await fetch(url('/api/upload/start'), { method: 'POST', headers: H() });
+    if (r.status === 401) throw new Error('Wrong password. Open the AI chip and check it.');
+    if (!r.ok) throw new Error('Could not start the upload (' + r.status + ')');
+    const project = (await r.json()).project;
+    let sent = 0;
+    for (let off = 0; off < f.size; off += CH) {
+      const blob = f.slice(off, off + CH);
+      for (let a = 0; ; a++) {
+        try {
+          await sendChunk(url('/api/upload/chunk?project=' + project + '&offset=' + off), blob, loaded => {
+            const total = sent + loaded, secs = (performance.now() - t0) / 1000, speed = total / Math.max(secs, 0.3);
+            const pct = Math.min(100, total / f.size * 100);
+            $('#upBar').style.width = pct.toFixed(1) + '%'; $('#upPct').textContent = Math.floor(pct) + '%';
+            $('#upMeta').textContent = fmtBytes(total) + ' of ' + fmtBytes(f.size) + '  ·  ' + fmtBytes(speed) + '/s  ·  about ' + fmtT((f.size - total) / Math.max(speed, 1)) + ' left';
+          });
+          break;
+        } catch (e) { if (e.message === 'Wrong password.' || a >= 3) throw e; await sleep(1500 * (a + 1)); }
+      }
+      sent += blob.size;
+    }
+    $('#upBar').style.width = '100%'; $('#upBar').classList.remove('stripes'); $('#upPct').textContent = '100%';
+    $('#upMeta').textContent = fmtBytes(f.size) + ' uploaded in ' + fmtT((performance.now() - t0) / 1000);
+    upStep('send', 'done'); upStep('unpack', 'run'); $('#unpackBar').classList.remove('hidden');
+    r = await fetch(url('/api/upload/finish?project=' + project), { method: 'POST', headers: H() });
+    if (!r.ok) throw new Error('The server could not start unpacking (' + r.status + ')');
+    const u0 = performance.now();
+    for (;;) {
+      await sleep(1500);
+      const st = await (await fetch(url('/api/ingest/' + project), { headers: H() })).json();
+      $('#upMeta').textContent = 'Unpacking and checking every file... ' + fmtT((performance.now() - u0) / 1000);
+      if (st.status === 'error') throw new Error(st.error);
+      if (st.status === 'ready') { S.project = project; save(); $('#unpackBar').classList.add('hidden'); upStep('unpack', 'done'); upStep('ready', 'done'); showSummary(st.summary); enterChat([]); break; }
+    }
+    $('#upMeta').textContent = '';
+  } catch (e) { upStep('send', 'bad'); upError(String(e.message || e)); }
+  $('#pick').disabled = false; $('#zip').value = '';
+}
+$('#pick').onclick = () => $('#zip').click();
+$('#zip').onchange = () => $('#zip').files[0] && uploadZip($('#zip').files[0]);
+
+function showSummary(s) {
+  const imgs = s.files_in_order.filter(x => !x.includes('(video')).length, vids = s.files_in_order.length - imgs;
+  const chips = [imgs + ' images', vids + ' clips', s.voiceover ? 'voiceover ' + fmtT(s.voiceover_seconds) : 'NO VOICEOVER'];
+  if (s.other_audio.length) chips.push(s.other_audio.length + ' music/audio');
+  $('#chips').innerHTML = '';
+  chips.forEach((c, i) => { const b = document.createElement('span'); b.textContent = c; b.className = 'rounded-md border px-2.5 py-1 ' + (c === 'NO VOICEOVER' ? 'border-coral text-coral' : 'border-ink-600 text-ink-200'); $('#chips').appendChild(b); });
+  $('#fileList').textContent = s.files_in_order.join('\n') + (s.warnings ? '\n\n! ' + s.warnings.join('\n! ') : '');
+  $('#summary').classList.remove('hidden');
+}
+
+/* ---------- chat feed ---------- */
+function bubble(role, text) {
+  const d = document.createElement('div');
+  d.className = 'rise max-w-[92%] whitespace-pre-wrap break-words rounded-xl px-3.5 py-2.5 text-[15px] leading-snug ' + (role === 'user' ? 'ml-auto bg-signal text-ink-950' : 'border border-ink-700 bg-ink-900 text-ink-200');
+  d.textContent = text; $('#feed').appendChild(d); d.scrollIntoView({ block: 'end', behavior: 'smooth' }); return d;
+}
+function videoCard(file, meta) {
+  const d = document.createElement('div'); d.className = 'rise overflow-hidden rounded-xl border border-ink-700 bg-ink-900';
+  const label = file === 'final.mp4' ? 'Final video' : 'Preview';
+  d.innerHTML = '<video controls playsinline preload="metadata" class="max-h-[62dvh] w-full bg-black"></video><div class="flex items-center justify-between gap-3 p-3"><div><p class="font-bold text-white"></p><p class="font-mono text-xs text-ink-400"></p></div><a class="min-h-11 rounded-lg bg-signal px-4 py-2.5 text-sm font-bold text-ink-950" download>Download</a></div>';
+  d.querySelector('video').src = fileUrl(file) + '&t=' + Date.now();
+  d.querySelector('p').textContent = label; d.querySelectorAll('p')[1].textContent = meta || '';
+  d.querySelector('a').href = fileUrl(file); $('#feed').appendChild(d); d.scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+function enterChat(history, outputs) {
+  setStep(2); $('#feedWrap').classList.remove('hidden'); $('#composer').classList.remove('hidden');
+  $('#feed').innerHTML = '';
+  if (!history.length) bubble('ai', 'Footage is ready. Describe the video you want (format, mood, captions, where to use sound effects), then send. I will transcribe, plan the cuts, edit, and render it.');
+  history.forEach(m => bubble(m.role === 'user' ? 'user' : 'ai', m.content));
+  (outputs || []).forEach(n => videoCard(n, ''));
+  if ((outputs || []).includes('final.mp4')) setStep(3);
+}
+
+/* ---------- live activity panel ---------- */
+function makePanel() {
+  const d = document.createElement('div'); d.className = 'rise rounded-xl border border-signal/40 bg-ink-900 p-3.5';
+  d.innerHTML = '<div class="flex items-center justify-between gap-3"><div class="flex min-w-0 items-center gap-2"><i class="ph"></i><p class="pl truncate text-sm font-semibold text-white">Starting...</p></div><p class="pt font-mono text-xs text-ink-400">0s</p></div>' +
+    '<div class="mt-3 h-2 overflow-hidden rounded-full bg-ink-700"><div class="pb stripes h-full w-0 rounded-full bg-signal transition-[width] duration-300"></div></div>' +
+    '<p class="pp mt-1.5 hidden font-mono text-xs text-ink-400"></p><ul class="rows mt-3 space-y-1.5 font-mono text-xs"></ul><p class="use mt-3 hidden font-mono text-xs text-ink-400"></p>';
+  $('.ph', d).outerHTML = '<i class="ph">' + IC.run + '</i>';
+  $('#feed').appendChild(d); d.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  const t0 = performance.now(); let cur = null, curT = 0, timer = setInterval(() => { $('.pt', d).textContent = fmtT((performance.now() - t0) / 1000); }, 500);
+  const P = {
+    el: d,
+    status(label) {
+      if (cur) { setRow(cur, 'done', (performance.now() - curT) / 1000); }
+      const li = document.createElement('li'); li.className = 'flex items-center gap-2 text-ink-200';
+      li.innerHTML = '<i>' + IC.run + '</i><span class="min-w-0 flex-1 truncate"></span><b class="font-normal text-ink-400"></b>';
+      li.querySelector('span').textContent = label; $('.rows', d).appendChild(li); cur = li; curT = performance.now();
+      $('.pl', d).textContent = label; this.pct({ v: null, label });
+    },
+    pct(p) {
+      if (p.label) $('.pl', d).textContent = p.label;
+      const bar = $('.pb', d);
+      if (p.v == null) { bar.style.width = '35%'; bar.classList.add('indet'); bar.classList.remove('stripes'); }
+      else { bar.classList.remove('indet'); bar.classList.add('stripes'); bar.style.width = Math.max(3, p.v) + '%'; $('.pp', d).textContent = p.v + '%'; $('.pp', d).classList.remove('hidden'); }
+    },
+    usage(u) { const e = $('.use', d); e.textContent = 'AI used ' + (u.prompt + u.completion).toLocaleString() + ' tokens (' + u.prompt.toLocaleString() + ' in, ' + u.completion.toLocaleString() + ' out) in ' + u.calls + ' call' + (u.calls > 1 ? 's' : ''); e.classList.remove('hidden'); },
+    error(t) { const li = document.createElement('li'); li.className = 'flex items-start gap-2 text-coral'; li.innerHTML = '<i>' + IC.bad + '</i><span class="min-w-0 flex-1 break-words"></span>'; li.querySelector('span').textContent = t; $('.rows', d).appendChild(li); this.failed = true; },
+    finish() {
+      clearInterval(timer); if (cur) setRow(cur, this.failed ? 'bad' : 'done', (performance.now() - curT) / 1000);
+      $('.ph', d).outerHTML = '<i class="ph">' + (this.failed ? IC.bad : IC.done) + '</i>';
+      $('.pl', d).textContent = this.failed ? 'Stopped. See the note below.' : 'Done'; $('.pt', d).textContent = fmtT((performance.now() - t0) / 1000);
+      const bar = $('.pb', d); bar.classList.remove('indet', 'stripes'); bar.style.width = '100%'; bar.classList.toggle('bg-mint', !this.failed); bar.classList.toggle('bg-coral', !!this.failed); $('.pp', d).classList.add('hidden');
+      d.classList.replace('border-signal/40', this.failed ? 'border-coral/40' : 'border-mint/30');
+    }
+  };
+  return P;
+}
+function setRow(li, st, secs) { li.querySelector('i').innerHTML = IC[st]; li.querySelector('b').textContent = fmtT(secs); }
+
+let busy = false;
+async function follow(job, panel) {
+  let after = 0, fails = 0;
+  for (;;) {
+    await sleep(1100);
+    let j;
+    try {
+      const r = await fetch(url('/api/jobs/' + job + '?after=' + after), { headers: H() });
+      if (!r.ok) throw new Error(r.status);
+      j = await r.json(); fails = 0;
+    } catch (e) { if (++fails > 8) { panel.error('Lost connection to the server. Reload the page to reattach.'); break; } panel.pct({ v: null, label: 'Reconnecting...' }); continue; }
+    after = j.next;
+    for (const e of j.events) {
+      if (e.k === 'status') panel.status(e.label);
+      else if (e.k === 'say') bubble('ai', e.text);
+      else if (e.k === 'file') { videoCard(e.file, e.resolution + ' · ' + e.seconds + 's · ' + e.size_mb + ' MB'); if (e.file === 'final.mp4') setStep(3); }
+      else if (e.k === 'usage') panel.usage(e);
+      else if (e.k === 'error') { panel.error(e.text); bubble('ai', e.text); }
+    }
+    if (j.progress) panel.pct(j.progress);
+    if (j.done) break;
+  }
+  panel.finish();
+}
+async function send(text, shown) {
+  text = (text || '').trim(); if (!text || busy) return;
+  if (!(S.base && S.aiKey && S.model) && !text.startsWith('/')) { openSheet(); return; }
+  busy = true; $('#send').disabled = true; $$('.chip').forEach(b => b.disabled = true);
+  bubble('user', shown || text); $('#msg').value = '';
+  const panel = makePanel();
+  try {
+    const r = await fetch(url('/api/chat'), { method: 'POST', headers: { ...H(), 'Content-Type': 'application/json' }, body: JSON.stringify({ project: S.project, message: text, agent: agent() }) });
+    if (!r.ok) throw new Error(r.status === 409 ? 'A job is already running for this project. Wait for it to finish.' : r.status === 401 ? 'Wrong password.' : 'Server error ' + r.status);
+    await follow((await r.json()).job, panel);
+  } catch (e) { panel.error(String(e.message || e)); panel.finish(); }
+  busy = false; $('#send').disabled = false; $$('.chip').forEach(b => b.disabled = false);
+}
+$('#send').onclick = () => send($('#msg').value);
+$('#msg').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send($('#msg').value); });
+$$('.chip').forEach(b => b.onclick = () => send(b.dataset.cmd, b.dataset.label));
+$('#tpl').onclick = () => {
+  $('#msg').value = 'Format: vertical (or landscape)\nStyle: fast and punchy, hard cuts, soft fade on topic changes\nCaptions: big, centered, 3 words at a time\nSound effects: whoosh before each new topic, impact on key facts\nNotes: 03.mp4 is the crowd shot, use it when she mentions the protest.';
+  $('#msg').focus();
+};
+
+/* ---------- boot: restore the project after a reload ---------- */
+async function boot() {
+  refreshChip(); setStep(1);
+  if (!S.key) { openSheet(); return; }
+  if (!S.project) return;
+  try {
+    const r = await fetch(url('/api/state/' + S.project), { headers: H() });
+    if (r.status === 401) { openSheet(); return; }
+    const st = await r.json();
+    if (!st.known) { if (!st.ingest) { S.project = ''; save(); } return; }
+    $('#upBox').classList.add('hidden'); showSummary(st.summary); enterChat(st.chat, st.outputs);
+    if (st.active_job) { busy = true; $('#send').disabled = true; const p = makePanel(); await follow(st.active_job, p); busy = false; $('#send').disabled = false; }
+  } catch (e) { /* offline: leave the page as is */ }
+}
+boot();
+</script>
+</body>
+</html>
