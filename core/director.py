@@ -13,6 +13,7 @@ Reply with ONE JSON object and nothing else:
 
 STATE shows the current timeline, one clip per line: index|file|start-end|motion|transition-in|words spoken during the clip.
 Follow the user's request first. If they gave no direction for something, improve pacing yourself.
+If the request says images were already placed on their narration lines, do not move their times.
 
 ops (applied in order, [] if no change needed):
 {"op":"set_clip","index":3,"fields":{"start_phrase":"billion dollars","motion":"zoom_out","transition":"fade","trim_start":1.5,"loop":true,"file":"07.jpg"}}  (null removes a field)
@@ -66,7 +67,7 @@ def decide(agent, state: str, sfx_text: str, user_message: str, history: list, t
     """Returns (new_timeline, plan, usage). Raises llm.LLMError if the AI cannot be reached.
     validate(timeline) -> {'ok','errors',...}. Repairs send only the errors, not new context."""
     emit = emit or (lambda e: None)
-    user = f"STATE\n{state}\n\nSFX (file|length|use)\n{sfx_text}\n\nREQUEST\n{user_message}"
+    user = f"STATE\n{state}\n\nSFX (file|length|use)\n{sfx_text}\n\nREQUEST\n{user_message[:6000]}"
     hist = [{"role": m["role"], "content": m["content"][:600]} for m in history[-6:]]
     messages = [{"role": "system", "content": SYSTEM}] + hist + [{"role": "user", "content": user}]
     usage = {"prompt": 0, "completion": 0, "calls": 0}
