@@ -406,7 +406,7 @@ $('#send').onclick = () => send($('#msg').value);
 $('#msg').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send($('#msg').value); });
 $$('.chip').forEach(b => b.onclick = () => send(b.dataset.cmd, b.dataset.label));
 $('#tpl').onclick = () => {
-  $('#msg').value = 'Format: vertical (or landscape)\nStyle: fast and punchy, hard cuts, soft fade on topic changes\nCaptions: big, centered, 3 words at a time\nSound effects: whoosh before each new topic, impact on key facts\nNotes: 03.mp4 is the crowd shot, use it when she mentions the protest.';
+  $('#msg').value = 'Format: vertical (or landscape)\nStyle: fast and punchy, hard cuts, soft fade on topic changes\nCaptions: big, centered, 3 words at a time\nSound effects: whoosh before each new topic, impact on key facts\n\nScene lines (optional, one per image: file | words the narrator says there):\n01.jpg | How does a dollar fifty bet end\n02.jpg | It starts in Los Angeles, 2015\n';
   $('#msg').focus();
 };
 
